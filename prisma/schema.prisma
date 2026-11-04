@@ -12,12 +12,39 @@ datasource db {
   provider = "postgresql"
 }
 
+enum AccountType {
+  SAVING_ACCOUNT
+  CURRENT_ACCOUNT
+}
+
 // table users: id, name, email, password, created_at, updated_at
 model User {
   id        Int      @id @default(autoincrement())
-  name      String?
-  email     String   @unique
+  name      String?  @db.VarChar(20)
+  email     String   @unique @db.VarChar(40)
   password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  accounts Account[]
+
+  @@map("users")
+}
+
+// table accounts: id, no, name, balance, user_id, created_at, updated_at, is_active, type
+model Account {
+  id        BigInt      @id @default(autoincrement())
+  no        String      @unique
+  name      String
+  branch    String      @default("Headquarter")
+  balance   Decimal     @default(0) @db.Decimal(12, 2)
+  type      AccountType @default(SAVING_ACCOUNT)
+  isActive  Boolean     @default(true) @map("is_active")
+  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime    @updatedAt @map("updated_at") @db.Timestamptz(3)
+  userId    Int         @map("user_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@map("accounts")
 }
